@@ -1,0 +1,2 @@
+This folder contains documentation about the database underlying the Democratizing Data project.
+The PNG file is an image of the schema, the md files describe the tables in the database and the process by which geocoding was added.
