@@ -1,12 +1,24 @@
+# Data model for Democratizing Data database
+This document describes the full database schema for the metadata about publications and datasets collected by the Democratizing Data project. The core database (currently ShowUStheData_v3 at SciServer) of the project contains all the tables documented here. Some agency-specific databases derived from it will miss a few of these tables, but are otherwise the same.
+
+
 ## agency_run
-The table with runs for the different agencies
+The table representing *runs* for the different agencies. In a "run" the corpus of publications at Elsevier is searched for the occurrence of references to data sets from an input list provided by the agency.
+
+This table is at the moment only an anchor representing a complete submission from Elsevier. Most other tables in this database have a run_id column referring to this table, indicating for which *run* they represent metadata.
+There is no more metadata then the agency's name and a version label produced by Elsevier.
+
+Elsevier may produce multiple submissions for the same agency and collection of input data sets, with different run parameterts. For example adding filtering terms, varying matching acceptance criteria etc.
+There is no explicit relation between such submissions here apart from a constancy of the agency name
+But also completely different runs with a different collection of data sets to be searched will eventually be contained in this table. These different *types of versions* will be further categorized in future versions of the model where we will add more runtime metadata about the runs.
+
 
 
 |column name|description|data type|length|is nullable|
 |:---|:---|:---|:---|:---|
 |id|unique identifier to the agency_run table|bigint|0|NO|
 |agency|name of the agency for which the run was performed|varchar|32|NO|
-|version|version of the run for the agency. allows multiple versions on the same data sets, or possibly new runs for the same agency but with different input data sets.|varchar|32|NO|
+|version|version of the run for the agency. allows multiple versions on the same data sets, or possibly new runs for the same agency, but with different input data sets.|varchar|32|NO|
 |run_date|approximate date the run was performed.|date|0|YES|
 |last_updated_date|last time the row was updated. generally the time of creation of the row.|datetime|0|NO|
 
@@ -158,7 +170,7 @@ publications discovered in a run
 |citation_count|The number of times this publication is cited in Scopus|int|0|YES|
 |fw_citation_impact|The Field Weighted Citation Impact (FWCI) for the publication. This is a measure for how impactful or important a publication is as measured through normalised citations. The number of times cited divided by the expected number of citations of articles in the same year, subject and publication type. World average across papers is 1.0 for this metric. This metric also changes over time. |float|0|YES|
 |last_updated_date|last time the row was updated. generally the time of creation of the row.|datetime|0|NO|
-
+|tested_expressions|a JSON-formatted string indicating whether certain expressions occurred in the publication.|varchar|MAX|YES|
 
 ## publication_affiliation
 The table with affiliations on a publication.
@@ -176,6 +188,15 @@ The table with affiliations on a publication.
 |city|the city for the addres or institute in this affiliation|nvarchar|128|YES|
 |state|if appropriate, the state for the addres or institute in this affiliation|nvarchar|128|YES|
 |postal_code|if appropriate, the postal code for this affiliation|nvarchar|64|YES|
+
+## publication_affiliation_geo
+The table with affiliations on a publication.
+
+
+|column name|description|data type|length|is nullable|
+|:---|:---|:---|:---|:---|
+|run_id|identifies the agency run for which this entry was determined, foreign key to agency_run.id|bigint|0|NO|
+|publication_affiliation_id|Identifies publication_affiliation for Foreign key to the publication_affiliationid assigned by Elsevier to this affiliation|varchar|128|YES|
 
 
 ## publication_asjc
@@ -242,7 +263,7 @@ Reviewers are susd_user-s assigned to validate dyads in the publication_dataset_
 |susd_user_id|foreign key to the susd_user table's id columns, identifying the user corresponding to this reviewer|bigint|0|NO|
 |run_id|identifies the agency run for which this entry was determined, foreign key to agency_run.id|bigint|0|NO|
 |last_updated_date|last time the row was updated. generally the time of creation of the row.|datetime|0|NO|
-
+|roles|String formatted as a JSON array with one or more roles that the reviewer has in the validation process. These are <ul><li>REVIEWER: dyads will be assighned to the user to validate</li><li>ADMIN: user can configure validation process for the run, can assigne reviewers and can monitor the progress of the validation process.</li></ul>|varchar|MAX|YES|
 
 ## snippet_validation
 table storing the validation results for dyads provided by reviewers
